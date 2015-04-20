@@ -1,9 +1,9 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <time.h>
 #include <sys/time.h>
-#include <inttypes.h>
-#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
 #define  NUM_LOOPS 100
 
@@ -17,7 +17,8 @@ int main(int argc, char *argv[])
     double **A;
     double *u, *v;
     long rows = 5000, columns = 5000;
-    struct timespec beginTime, endTime;
+    struct timespec beginTime;
+    struct timespec endTime;
     long i, j, k;
 
     // Inicjujemy wektory i macierz.
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
 
     for (i = 0; i < rows; i++)
         A[i] = (double*)malloc(columns * sizeof(double));
-
+    omp_set_num_threads(8);
     // Wypełniamy wektor u oraz macierz A dowolnymi wartościami.
     for (i = 0; i < columns; i++) 
     {

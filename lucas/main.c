@@ -3,6 +3,7 @@
 #include <time.h>
 
 #define  NUM_LOOPS 50
+#define SEED 20
 
 int main(int argc, char *argv[]) {
     double **A;
@@ -14,6 +15,7 @@ int main(int argc, char *argv[]) {
 	
 	rows = atoi(argv[1]);
 	columns = atoi(argv[2]);
+	int thread_count = atoi(argv[3]);
 
     // Inicjujemy wektory i macierz.
     u = (double*)malloc(columns * sizeof(double));
@@ -35,7 +37,7 @@ int main(int argc, char *argv[]) {
 
     begin_t = time(NULL);
 
-	omp_set_num_threads(4);
+	omp_set_num_threads(thread_count);
 
     // Pętla zewnętrzna.
     for (k = 0; k < NUM_LOOPS; k++) {
@@ -49,6 +51,11 @@ int main(int argc, char *argv[]) {
 			}
         }
     }
+
+	printf("Wynik:\n");
+	for(i = 0; i < columns; i++) {
+		printf("%f\n", v[i]);
+	}
 
     end_t = time(NULL);
 

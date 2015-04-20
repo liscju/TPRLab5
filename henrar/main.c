@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include <string.h>
+#include <omp.h>
 
 #define  NUM_LOOPS 100
 
@@ -20,8 +21,9 @@ int main(int argc, char *argv[])
     struct timespec beginTime;
     struct timespec endTime;
     long i, j, k;
+    int num_threads = 8;
 
-    // Inicjujemy wektory i macierz.
+    // inicjalizacja 
     u = (double*)malloc(columns * sizeof(double));
     v = (double*)malloc(rows * sizeof(double));
 
@@ -29,8 +31,8 @@ int main(int argc, char *argv[])
 
     for (i = 0; i < rows; i++)
         A[i] = (double*)malloc(columns * sizeof(double));
-    omp_set_num_threads(8);
-    // Wypełniamy wektor u oraz macierz A dowolnymi wartościami.
+    omp_set_num_threads(num_threads);
+    // Wypelnienie wektora i macierzy
     for (i = 0; i < columns; i++) 
     {
         u[i] = (double)(i / 1000.0f);
@@ -58,7 +60,7 @@ int main(int argc, char *argv[])
     clock_gettime(CLOCK_MONOTONIC, &endTime);
 
     printf("Czas obliczen: %f.\n", calculateTimeDifference(&endTime, &beginTime));
-    // Zwalniamy pamięć.
+
     free(u);
     free(v);
 

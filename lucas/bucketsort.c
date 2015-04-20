@@ -12,7 +12,7 @@
 // needed for call to qsort()
 int cmpints(int* u, int* v) {
 	if(*u < *v) return -1;
-	if(*u > *v) return -1;
+	if(*u > *v) return 1;
 	return 0;
 }
 
@@ -81,6 +81,7 @@ void bsort(int* x, int n) {
 		}
 		// now record how many this thread got
 		counts[me] = nummypart;
+		
 		// sort my part
 		qsort(mypart, nummypart, sizeof(int), cmpints);
 		#pragma omp barrier	//other threads need to know all of counts

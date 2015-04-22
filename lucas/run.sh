@@ -1,2 +1,3 @@
-gcc -fopenmp -o main.out main.c
+gcc -fopenmp -o bsort bucketsort.c
 
+./bsort -b 100000 2

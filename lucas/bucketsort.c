@@ -6,25 +6,142 @@
 // setenv OMP_NUM_THREADS 8
 
 #include <omp.h>	// required
+
 #include <stdlib.h>
 #include <stdio.h>
 
+#define TYPE_BASIC 0
+#define TYPE_SCALING 1
+
+typedef long long int llint;
+
+/* globals */
+int type;
+llint tableSize;
+int numberOfThreads;
+int* table;
+double spentTime;
+FILE* timeFile;
+/* end globals  */
+
+
+/* helper function declarations */
+void initParams(int, char**);
+void initTable();
+void printTable(int*, llint);
+void checkIfSorted(int*, llint);
+
+int int_cmp(const void*, const void*);
+void grab(int, int*, llint*);
+void findminmax(int*, llint, int*, int*);
+void bsort(int*, llint);
+
+void openFiles();
+void closeFiles();
+/* end helper function declarations */
+
+
+int main(int argc, char** argv) {
+	if(argc != 4) {
+		fprintf(stderr, "Wrong arguments. Usage: %s <-b(asic)/-s(caling)> <table-size> <number-of-threads>\n", argv[0]);
+		return EXIT_FAILURE;
+	}
+	initParams(argc, argv);
+	
+	openFiles();
+
+	spentTime = omp_get_wtime();	
+
+	initTable();
+
+	if(tableSize < 100) {
+		printf("x before sorting:\n");
+		printTable(table, tableSize);
+	}
+	
+	bsort(table, tableSize);
+
+	checkIfSorted(table, tableSize);
+	
+	if(tableSize < 100) {
+		printf("x after sorting:\n");
+		printTable(table, tableSize);
+	}
+
+	spentTime = omp_get_wtime() - spentTime;
+
+	fprintf(timeFile, "%d %lld %f\n", numberOfThreads, tableSize, spentTime);	
+
+	closeFiles();
+}
+
+
+/* helper function decfinitions */
+void initParams(int argc, char** argv) {
+	if(strcmp(argv[1], "-s") == 0) {
+		type = TYPE_SCALING;
+	} else {
+		type = TYPE_BASIC;
+	}
+	tableSize = atoll(argv[2]);
+	numberOfThreads = atoi(argv[3]);
+
+	omp_set_dynamic(0);     				// Explicitly disable dynamic teams
+	omp_set_num_threads(numberOfThreads);	// Set number of threads
+}
+
+void initTable() {
+	table = malloc(tableSize*sizeof(int));
+	llint i;
+	for(i=0; i<tableSize; i++) {
+		table[i] = rand()%tableSize;
+	}
+}
+
+void printTable(int* tab, llint tabSize) {
+	llint i;
+	for(i=0; i<tabSize; i++) {
+		printf("%d ", tab[i]);
+	}
+	printf("\n");
+}
+
+void checkIfSorted(int* tab, llint tabSize) {
+	int sorted = 1;
+	llint i=1;
+	while(sorted && i<tabSize) {
+		if(tab[i-1] > tab[i]) {
+			sorted = 0;
+		}
+		i++;
+	}
+	printf("(%d, %lld) ", numberOfThreads, tableSize);
+	if(sorted) {
+		printf("Table has been sorted.\n");
+	} else {
+		printf("Table has NOT been sorted.\n");
+	}
+	
+}
+
 // needed for call to qsort()
-int cmpints(int* u, int* v) {
-	if(*u < *v) return -1;
-	if(*u > *v) return 1;
-	return 0;
+int int_cmp(const void *a, const void *b) { 
+    const int* ia = (const int*)a; // casting pointer types 
+    const int* ib = (const int*)b;
+    return *ia  - *ib; 
+	/* integer comparison: returns negative if b > a 
+	and positive if a > b */ 
 }
 
 // adds xi to the part array, increments npart, the length of part
-void grab(int xi, int* part, int* npart) {
+void grab(int xi, int* part, llint* npart) {
 	part[*npart] = xi;
 	*npart += 1;
 }
 
 // finds the min and max in y, length ny, placing them in miny and maxy
-void findminmax(int* y, int ny, int* miny, int* maxy) {
-	int i, yi;
+void findminmax(int* y, llint ny, int* miny, int* maxy) {
+	llint i, yi;
 	*miny = *maxy = y[0];
 	for(i=1; i<ny; i++) {
 		yi = i[y];
@@ -34,7 +151,7 @@ void findminmax(int* y, int ny, int* miny, int* maxy) {
 }
 
 // sort the array x of length n
-void bsort(int* x, int n) {
+void bsort(int* x, llint n) {
 	// these are local to this function, but shared among the threads
 	float* bdries; int* counts;
 	#pragma omp parallel
@@ -44,7 +161,8 @@ void bsort(int* x, int n) {
 		int me = omp_get_thread_num();
 		// have to do the next call within the block, while the threads are active
 		int nth = omp_get_num_threads();
-		int i, minx, maxx, start;
+		llint i;
+		int minx, maxx, start;
 		int* mypart;
 		float increm;
 		int SAMPLESIZE;
@@ -63,7 +181,8 @@ void bsort(int* x, int n) {
 			counts = malloc(nth*sizeof(int));
 		}
 		// now have this thread grab its portion of the array; thread 0 takes everything below bdries[0], thread 1 everything between bdries[0] and bdries[1], etc., with thread nth-1 taking everything over bdries[nth-1]
-		mypart = malloc(n*sizeof(int)); int nummypart = 0;
+		mypart = malloc(n*sizeof(int)); 
+		llint nummypart = 0;
 		for(i=0; i<n; i++) {
 			if(me == 0) {
 				if(x[i] <= bdries[0]) {
@@ -83,7 +202,7 @@ void bsort(int* x, int n) {
 		counts[me] = nummypart;
 		
 		// sort my part
-		qsort(mypart, nummypart, sizeof(int), cmpints);
+		qsort(mypart, nummypart, sizeof(int), int_cmp);
 		#pragma omp barrier	//other threads need to know all of counts
 		// copy sorted chunk back to the original array; first find start point
 		start = 0;
@@ -97,29 +216,19 @@ void bsort(int* x, int n) {
 	// implied barrier here; main thread won't resume until all threads are done
 }
 
-int main(int argc, char** argv) {
-	// test case
-	int n = atoi(argv[1]);
-	int* x = malloc(n*sizeof(int));
-	int i;
-	for(i=0; i<n; i++) {
-		x[i] = rand()%50;
+void openFiles() {
+	char filenameBuffer[100];
+	char* typeString;
+	if(type == TYPE_SCALING) {
+		typeString = "scaling";
+	} else {
+		typeString = "basic";
 	}
-	if(n < 100) {
-		printf("x before sorting:\n");
-		for(i=0; i<n; i++) {
-			printf("%d ", x[i]);
-		}
-		printf("\n");
-	}
-	
-	bsort(x, n);
-	
-	if(n < 100) {
-		printf("x after sorting:\n");
-		for(i=0; i<n; i++) {
-			printf("%d ", x[i]);
-		}
-		printf("\n");
-	}
+	sprintf(filenameBuffer, "%s_%lld.txt", typeString, tableSize);
+	timeFile = fopen(filenameBuffer, "a+");
 }
+
+void closeFiles() {
+	fclose(timeFile);
+}
+/* end helper function decfinitions */

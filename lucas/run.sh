@@ -1,3 +1,15 @@
+#!/bin/bash
 gcc -fopenmp -o bsort bucketsort.c
 
-./bsort -b 100000 2
+tableSizes=(100000 1000000 10000000 100000000)
+threadCounts=(1 2 3 4)
+
+for tableSize in "${tableSizes[@]}"
+do
+	for threadCount in "${threadCounts[@]}"
+	do
+		./bsort -b $tableSize $threadCount
+		./bsort -s $tableSize $threadCount
+	done
+done
+#./bsort -b 10000000 1

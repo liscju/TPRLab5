@@ -50,7 +50,6 @@ int main(int argc, char** argv) {
 	
 	openFiles();
 
-	spentTime = omp_get_wtime();	
 
 	initTable();
 
@@ -59,7 +58,9 @@ int main(int argc, char** argv) {
 		printTable(table, tableSize);
 	}
 	
+	spentTime = omp_get_wtime();	
 	bsort(table, tableSize);
+	spentTime = omp_get_wtime() - spentTime;
 
 	checkIfSorted(table, tableSize);
 	
@@ -68,7 +69,6 @@ int main(int argc, char** argv) {
 		printTable(table, tableSize);
 	}
 
-	spentTime = omp_get_wtime() - spentTime;
 
 	fprintf(timeFile, "%d %lld %f\n", numberOfThreads, tableSize, spentTime);	
 
@@ -85,6 +85,9 @@ void initParams(int argc, char** argv) {
 	}
 	tableSize = atoll(argv[2]);
 	numberOfThreads = atoi(argv[3]);
+	if(type == TYPE_SCALING) {
+		tableSize *= numberOfThreads;
+	}
 
 	omp_set_dynamic(0);     				// Explicitly disable dynamic teams
 	omp_set_num_threads(numberOfThreads);	// Set number of threads
@@ -115,7 +118,11 @@ void checkIfSorted(int* tab, llint tabSize) {
 		}
 		i++;
 	}
-	printf("(%d, %lld) ", numberOfThreads, tableSize);
+	char typeChar = 'b';
+	if(type == TYPE_SCALING) {
+		typeChar = 's';
+	}
+	printf("(%c, %d, %lld) ", typeChar, numberOfThreads, tableSize);
 	if(sorted) {
 		printf("Table has been sorted.\n");
 	} else {
@@ -183,18 +190,24 @@ void bsort(int* x, llint n) {
 		// now have this thread grab its portion of the array; thread 0 takes everything below bdries[0], thread 1 everything between bdries[0] and bdries[1], etc., with thread nth-1 taking everything over bdries[nth-1]
 		mypart = malloc(n*sizeof(int)); 
 		llint nummypart = 0;
-		for(i=0; i<n; i++) {
-			if(me == 0) {
-				if(x[i] <= bdries[0]) {
-					grab(x[i], mypart, &nummypart);
-				}
-			} else if(me < nth-1) {
-				if(x[i] > bdries[me-1] && x[i] <= bdries[me]) {
-					grab(x[i], mypart, &nummypart);
-				}
-			} else {
-				if(x[i] > bdries[me-1]) {
-					grab(x[i], mypart, &nummypart);
+		if(nth == 1) {
+			for(i=0; i<n; i++) {
+				grab(x[i], mypart, &nummypart);
+			}
+		} else {
+			for(i=0; i<n; i++) {
+				if(me == 0) {
+					if(x[i] <= bdries[0]) {
+						grab(x[i], mypart, &nummypart);
+					}
+				} else if(me < nth-1) {
+					if(x[i] > bdries[me-1] && x[i] <= bdries[me]) {
+						grab(x[i], mypart, &nummypart);
+					}
+				} else {
+					if(x[i] > bdries[me-1]) {
+						grab(x[i], mypart, &nummypart);
+					}
 				}
 			}
 		}
@@ -218,13 +231,15 @@ void bsort(int* x, llint n) {
 
 void openFiles() {
 	char filenameBuffer[100];
+	llint tabSize = tableSize;
 	char* typeString;
 	if(type == TYPE_SCALING) {
 		typeString = "scaling";
+		tabSize /= numberOfThreads;
 	} else {
 		typeString = "basic";
 	}
-	sprintf(filenameBuffer, "%s_%lld.txt", typeString, tableSize);
+	sprintf(filenameBuffer, "out_%s_%lld.txt", typeString, tabSize);
 	timeFile = fopen(filenameBuffer, "a+");
 }
 

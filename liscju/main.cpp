@@ -2,11 +2,14 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <omp.h>
 
 int bucketMain();
 
-using namespace std;
+void initialize_cmd_arguments(int argc, char **argv);
 
+using namespace std;
+/*
 // Function to sort arr[] of size n using bucket sort
 void bucketSort(float arr[], int n)
 {
@@ -31,7 +34,7 @@ void bucketSort(float arr[], int n)
 			arr[index++] = b[i][j];
 }
 
-int bucketMain() {
+int bucketSortMain() {
 	float arr[] = {0.897, 0.565, 0.656, 0.1234, 0.665, 0.3434};
 	int n = sizeof(arr)/sizeof(arr[0]);
 	bucketSort(arr, n);
@@ -40,10 +43,29 @@ int bucketMain() {
 	for (int i=0; i<n; i++)
 		cout << arr[i] << " ";
 	return 0;
+}*/
+
+void usage() {
+	printf("./a.out");
+	exit(0);
 }
 
+void initialize_cmd_arguments(int argc, char **argv) {
+
+}
+
+void bucket_sort_init(int argc,char **argv) {
+	initialize_cmd_arguments(argc,argv);
+}
+
+
 /* Driver program to test above funtion */
-int main() {
-	return bucketMain();
+int main(int argc,char **argv) {
+
+	omp_set_num_threads(3);
+	#pragma omp parallel for
+	for (int i=0;i<10;i++) {
+		printf("Thread id: %d iter: %d\n", omp_get_thread_num(), i);
+	}
 }
 

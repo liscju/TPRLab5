@@ -46,8 +46,14 @@ void print_array() {
 }
 
 void print_buckets() {
-	for (int i = 0; i < size_of_array; ++i) {
-		cout << "buckets[" << i << "]=" << buckets[i] << endl;
+	for (int j = 0; j < bucket_count; ++j) {
+		cout << "bucket for " << j << " = {";
+		for (int i = 0; i < size_of_array; ++i) {
+			if (buckets[i] == j) {
+				cout << array_to_sort[i] << ",";
+			}
+		}
+		cout << "}" << endl;
 	}
 }
 

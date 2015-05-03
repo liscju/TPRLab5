@@ -7,11 +7,8 @@
 void initialize_cmd_arguments(int argc, char **argv);
 void bucket_sort_init(int argc,char **argv);
 void usage(char *program_name);
-
 void generate_array();
-
 void divide_points_to_buckets();
-
 void initialize_buckets();
 
 using namespace std;
@@ -19,7 +16,7 @@ using namespace std;
 int size_of_array;
 int bucket_count;
 float *array_to_sort;
-vector<float> *buckets;
+int *buckets;
 
 void usage(char *program_name) {
 	printf("Usage:\n ./%s size_of_array bucket_count",program_name);
@@ -49,12 +46,8 @@ void print_array() {
 }
 
 void print_buckets() {
-	for (int i = 0; i < bucket_count; ++i) {
-		cout << "bucket[" << i << "]={";
-		for (auto iter = buckets[i].begin(); iter != buckets[i].end(); ++iter) {
-			cout << (*iter) << ",";
-		}
-		cout << "}" << endl;
+	for (int i = 0; i < size_of_array; ++i) {
+		cout << "buckets[" << i << "]=" << buckets[i] << endl;
 	}
 }
 
@@ -69,18 +62,17 @@ void bucket_sort_init(int argc,char **argv) {
 void divide_points_to_buckets() {
 	initialize_buckets();
 
-
+	omp_set_num_threads(bucket_count);
+#pragma omp parallel for
 	for (int i = 0; i < size_of_array; ++i) {
 		int bucket_to_insert = static_cast<int>(array_to_sort[i]*bucket_count);
-		buckets[bucket_to_insert].push_back(array_to_sort[i]);
+		buckets[i] = bucket_to_insert;
+		cout << "Thread:" << omp_get_thread_num() << " took " << i <<" element" << endl;
 	}
 }
 
 void initialize_buckets() {
-	buckets = new vector<float>[bucket_count];
-	for (int i = 0; i < bucket_count; ++i) {
-		buckets[i] = vector<float>();
-	}
+	buckets = new int[size_of_array];
 }
 
 

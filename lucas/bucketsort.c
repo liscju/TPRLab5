@@ -239,7 +239,7 @@ void openFiles() {
 	} else {
 		typeString = "basic";
 	}
-	sprintf(filenameBuffer, "out_%s_%lld.txt", typeString, tabSize);
+	sprintf(filenameBuffer, "results/out_%s_%lld.txt", typeString, tabSize);
 	timeFile = fopen(filenameBuffer, "a+");
 }
 

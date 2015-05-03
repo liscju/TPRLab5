@@ -8,9 +8,12 @@ void initialize_cmd_arguments(int argc, char **argv);
 void bucket_sort_init(int argc,char **argv);
 void usage(char *program_name);
 
+void generate_array();
+
 using namespace std;
 
 int size_of_array;
+float *array_to_sort;
 
 void usage(char *program_name) {
 	printf("Usage:\n ./%s size_of_array",program_name);
@@ -26,7 +29,18 @@ void initialize_cmd_arguments(int argc, char **argv) {
 
 void bucket_sort_init(int argc,char **argv) {
 	initialize_cmd_arguments(argc,argv);
-	printf("Size of array = %d",size_of_array);
+	generate_array();
+	for (int i = 0; i < size_of_array; i++) {
+		printf("tab[%d]=%f\n",i,array_to_sort[i]);
+	}
+}
+
+void generate_array() {
+	srand(static_cast <unsigned> (time(0)) );
+	array_to_sort = new float[size_of_array];
+	for (int i = 0; i < size_of_array; ++i) {
+		array_to_sort[i] = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+	}
 }
 
 
@@ -40,5 +54,30 @@ int main(int argc,char **argv) {
 	}*/
 
 	bucket_sort_init(argc,argv);
+}
+
+
+// Function to sort arr[] of size n using bucket sort
+void bucketSort(float arr[], int n)
+{
+	// 1) Create n empty buckets
+	vector<float> b[n];
+
+	// 2) Put array elements in different buckets
+	for (int i=0; i<n; i++)
+	{
+		int bi = n*arr[i]; // Index in bucket
+		b[bi].push_back(arr[i]);
+	}
+
+	// 3) Sort individual buckets
+	for (int i=0; i<n; i++)
+		sort(b[i].begin(), b[i].end());
+
+	// 4) Concatenate all buckets into arr[]
+	int index = 0;
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < b[i].size(); j++)
+			arr[index++] = b[i][j];
 }
 

@@ -10,29 +10,28 @@ void usage(char *program_name);
 
 void generate_array();
 
+void divide_points_to_buckets();
+
+void initialize_buckets();
+
 using namespace std;
 
 int size_of_array;
+int bucket_count;
 float *array_to_sort;
+vector<float> *buckets;
 
 void usage(char *program_name) {
-	printf("Usage:\n ./%s size_of_array",program_name);
+	printf("Usage:\n ./%s size_of_array bucket_count",program_name);
 	exit(0);
 }
 
 void initialize_cmd_arguments(int argc, char **argv) {
-	if (argc == 1)
+	if (argc != 3)
 		usage(argv[0]);
 
 	size_of_array = atoi(argv[1]);
-}
-
-void bucket_sort_init(int argc,char **argv) {
-	initialize_cmd_arguments(argc,argv);
-	generate_array();
-	for (int i = 0; i < size_of_array; i++) {
-		printf("tab[%d]=%f\n",i,array_to_sort[i]);
-	}
+	bucket_count = atoi(argv[2]);
 }
 
 void generate_array() {
@@ -40,6 +39,47 @@ void generate_array() {
 	array_to_sort = new float[size_of_array];
 	for (int i = 0; i < size_of_array; ++i) {
 		array_to_sort[i] = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+	}
+}
+
+void print_array() {
+	for (int i = 0; i < size_of_array; ++i) {
+		cout << "tab[" << i << "]=" << array_to_sort[i] << endl;
+	}
+}
+
+void print_buckets() {
+	for (int i = 0; i < bucket_count; ++i) {
+		cout << "bucket[" << i << "]={";
+		for (auto iter = buckets[i].begin(); iter != buckets[i].end(); ++iter) {
+			cout << (*iter) << ",";
+		}
+		cout << "}" << endl;
+	}
+}
+
+void bucket_sort_init(int argc,char **argv) {
+	initialize_cmd_arguments(argc,argv);
+	generate_array();
+	print_array();
+	divide_points_to_buckets();
+	print_buckets();
+}
+
+void divide_points_to_buckets() {
+	initialize_buckets();
+
+
+	for (int i = 0; i < size_of_array; ++i) {
+		int bucket_to_insert = static_cast<int>(array_to_sort[i]*bucket_count);
+		buckets[bucket_to_insert].push_back(array_to_sort[i]);
+	}
+}
+
+void initialize_buckets() {
+	buckets = new vector<float>[bucket_count];
+	for (int i = 0; i < bucket_count; ++i) {
+		buckets[i] = vector<float>();
 	}
 }
 

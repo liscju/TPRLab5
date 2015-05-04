@@ -4,6 +4,7 @@
 #include <vector>
 #include <omp.h>
 #include <string.h>
+#include <assert.h>
 
 void initialize_cmd_arguments(int argc, char **argv);
 void bucket_sort_init(int argc,char **argv);
@@ -15,6 +16,8 @@ void sort_points();
 void print_sorted_points();
 void initialize_output_array();
 void check_if_output_array_sorted();
+
+void print_SpentTime(double time);
 
 using namespace std;
 
@@ -79,14 +82,29 @@ void print_buckets() {
 void bucket_sort_init(int argc,char **argv) {
 	initialize_cmd_arguments(argc,argv);
 	generate_array();
-	print_array();
-	divide_points_to_buckets();
-	print_buckets();
+	//print_array();
 
+	double spentTime = omp_get_wtime();
+	divide_points_to_buckets();
+	//print_buckets();
 	initialize_output_array();
 	sort_points();
-	print_sorted_points();
+	//print_sorted_points();
+	spentTime = omp_get_wtime() - spentTime;
+
+	print_SpentTime(spentTime);
+
 	check_if_output_array_sorted();
+}
+
+void print_SpentTime(double time) {
+	if (concurrency_type == CONCURRENT_BASIC) {
+		cout << "T_BASIC[" << size_of_array;
+	} else {
+		assert(concurrency_type == CONCURRENT_SCALING);
+		cout << "T_SCALE[" << size_of_array / bucket_count;
+	}
+	cout << "]=" << time << endl;
 }
 
 void check_if_output_array_sorted() {
@@ -113,7 +131,7 @@ void sort_points() {
 #pragma omp parallel
 	{
 		int threadnum = omp_get_thread_num();
-		cout << "Sorted thread:" << threadnum << endl;
+		//cout << "Sorted thread:" << threadnum << endl;
 
 		float *own_array = new float[size_of_array];
 		int own_size = 0;
@@ -144,7 +162,7 @@ void divide_points_to_buckets() {
 	for (int i = 0; i < size_of_array; ++i) {
 		int bucket_to_insert = static_cast<int>(array_to_sort[i]*bucket_count);
 		buckets[i] = bucket_to_insert;
-		cout << "Thread:" << omp_get_thread_num() << " took " << i <<" element" << endl;
+		//cout << "Thread:" << omp_get_thread_num() << " took " << i <<" element" << endl;
 	}
 }
 

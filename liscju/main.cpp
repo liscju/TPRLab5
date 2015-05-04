@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <omp.h>
+#include <string.h>
 
 void initialize_cmd_arguments(int argc, char **argv);
 void bucket_sort_init(int argc,char **argv);
@@ -17,24 +18,36 @@ void check_if_output_array_sorted();
 
 using namespace std;
 
+#define CONCURRENT_BASIC 0
+#define CONCURRENT_SCALING 1
+
 int size_of_array;
 int bucket_count;
 float *array_to_sort;
 int *buckets;
-
 float *sorted_array;
+int concurrency_type;
 
 void usage(char *program_name) {
-	printf("Usage:\n ./%s size_of_array bucket_count",program_name);
+	printf("Usage:\n ./%s [--basic|--scaling] size_of_array bucket_count",program_name);
 	exit(0);
 }
 
 void initialize_cmd_arguments(int argc, char **argv) {
-	if (argc != 3)
+	if (argc != 4)
 		usage(argv[0]);
 
-	size_of_array = atoi(argv[1]);
-	bucket_count = atoi(argv[2]);
+	size_of_array = atoi(argv[2]);
+	bucket_count = atoi(argv[3]);
+
+	if (strcmp(argv[1],"--basic") == 0) {
+		concurrency_type = CONCURRENT_BASIC;
+	} else if (strcmp(argv[1],"--scaling") == 0) {
+		concurrency_type = CONCURRENT_SCALING;
+
+		size_of_array *= bucket_count;
+	} else
+		usage(argv[0]);
 }
 
 void generate_array() {
@@ -95,6 +108,7 @@ void print_sorted_points() {
 }
 
 void sort_points() {
+	omp_set_dynamic(0);
 	omp_set_num_threads(bucket_count);
 #pragma omp parallel
 	{
@@ -124,6 +138,7 @@ void sort_points() {
 void divide_points_to_buckets() {
 	initialize_buckets();
 
+	omp_set_dynamic(0);
 	omp_set_num_threads(bucket_count);
 #pragma omp parallel for
 	for (int i = 0; i < size_of_array; ++i) {

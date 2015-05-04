@@ -5,8 +5,8 @@ g++ -fopenmp -o bsort main.cpp
 rm -rf results
 mkdir results
 
-#tableSizes=(100000 1000000 10000000 100000000)
-tableSizes=(50 100 200 300)
+tableSizes=(100000 1000000 10000000 100000000)
+#tableSizes=(50 100 200 300)
 threadCounts=(1 2 4 5 6 7 8 9 11 12)
 
 for tableSize in "${tableSizes[@]}"

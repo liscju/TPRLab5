@@ -104,6 +104,7 @@ void print_SpentTime(double time) {
 		assert(concurrency_type == CONCURRENT_SCALING);
 		cout << "T_SCALE[" << size_of_array / bucket_count;
 	}
+	cout << ", " << bucket_count;
 	cout << "]=" << time << endl;
 }
 

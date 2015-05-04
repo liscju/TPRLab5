@@ -32,7 +32,7 @@ float *sorted_array;
 int concurrency_type;
 
 void usage(char *program_name) {
-	printf("Usage:\n ./%s [--basic|--scaling] size_of_array bucket_count",program_name);
+	cout << "Usage:\n ./" << program_name << " [--basic|--scaling] size_of_array bucket_count" << endl;
 	exit(0);
 }
 

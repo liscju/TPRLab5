@@ -26,9 +26,9 @@ using namespace std;
 
 int size_of_array;
 int bucket_count;
-float *array_to_sort;
+double *array_to_sort;
 int *buckets;
-float *sorted_array;
+double *sorted_array;
 int concurrency_type;
 
 void usage(char *program_name) {
@@ -55,9 +55,9 @@ void initialize_cmd_arguments(int argc, char **argv) {
 
 void generate_array() {
 	srand(static_cast <unsigned> (time(0)) );
-	array_to_sort = new float[size_of_array];
+	array_to_sort = new double[size_of_array];
 	for (int i = 0; i < size_of_array; ++i) {
-		array_to_sort[i] = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+		array_to_sort[i] = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
 	}
 }
 
@@ -117,7 +117,7 @@ void check_if_output_array_sorted() {
 }
 
 void initialize_output_array() {
-	sorted_array = new float[size_of_array];
+	sorted_array = new double[size_of_array];
 }
 
 void print_sorted_points() {
@@ -134,7 +134,7 @@ void sort_points() {
 		int threadnum = omp_get_thread_num();
 		//cout << "Sorted thread:" << threadnum << endl;
 
-		float *own_array = new float[size_of_array];
+		double *own_array = new double[size_of_array];
 		int own_size = 0;
 
 		int start_offset = 0;

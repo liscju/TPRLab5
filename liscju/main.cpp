@@ -11,12 +11,18 @@ void generate_array();
 void divide_points_to_buckets();
 void initialize_buckets();
 
+void sort_points();
+
+void print_sorted_points();
+
 using namespace std;
 
 int size_of_array;
 int bucket_count;
 float *array_to_sort;
 int *buckets;
+
+float *sorted_array;
 
 void usage(char *program_name) {
 	printf("Usage:\n ./%s size_of_array bucket_count",program_name);
@@ -63,6 +69,43 @@ void bucket_sort_init(int argc,char **argv) {
 	print_array();
 	divide_points_to_buckets();
 	print_buckets();
+
+	sorted_array = new float[size_of_array];
+	sort_points();
+	print_sorted_points();
+}
+
+void print_sorted_points() {
+	for (int i = 0; i < size_of_array; ++i) {
+		cout << "sorted_array[" << i << "]=" << sorted_array[i] << endl;
+	}
+}
+
+void sort_points() {
+	omp_set_num_threads(bucket_count);
+#pragma omp parallel
+	{
+		int threadnum = omp_get_thread_num();
+		cout << "Sorted thread:" << threadnum << endl;
+
+		float *own_array = new float[size_of_array];
+		int own_size = 0;
+
+		int start_offset = 0;
+
+		for (int i = 0; i < size_of_array; ++i) {
+			if (buckets[i] == threadnum)
+				own_array[own_size++] = array_to_sort[i];
+			else if (buckets[i] < threadnum)
+				start_offset++;
+		}
+
+		sort(own_array,own_array+own_size);
+
+		for (int j = 0; j < own_size; ++j) {
+			sorted_array[start_offset+j] = own_array[j];
+		}
+	}
 }
 
 void divide_points_to_buckets() {
